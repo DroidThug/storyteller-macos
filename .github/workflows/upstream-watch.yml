@@ -1,0 +1,36 @@
+name: upstream-watch
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare pin with upstream
+        id: up
+        run: ./scripts/check-upstream.sh
+
+      - name: Open an issue when a newer release exists
+        if: steps.up.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.up.outputs.latest_tag }}
+        run: |
+          title="Upstream release $TAG is available"
+          existing="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq 'length')"
+          if [ "$existing" = "0" ]; then
+            gh issue create --title "$title" --body "Upstream has a newer web release: \`$TAG\`.
+
+          Pinned base tag: see \`UPSTREAM_BASE_TAG\` in \`config.env\`.
+          To update: bump \`UPSTREAM_REF\` and \`UPSTREAM_BASE_TAG\`, then let CI run.
+          Changelog: https://gitlab.com/storyteller-platform/storyteller/-/tags/$TAG"
+          fi

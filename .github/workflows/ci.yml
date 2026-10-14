@@ -1,0 +1,58 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1" # weekly, catches runner/toolchain drift
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14 # Apple silicon: 3 vCPU, 7 GB RAM, 14 GB disk
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install system tools
+        run: brew install git-lfs ffmpeg
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('config.env') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Setup (clone upstream at pinned ref, LFS, readium)
+        env:
+          # test fixtures live in LFS
+          EXTRA_LFS_INCLUDE: "**/__fixtures__/**"
+        run: ./scripts/setup.sh
+
+      - name: Build
+        id: build
+        run: ./scripts/build.sh
+
+      - name: Disk after build
+        if: always()
+        run: df -h /
+
+      - name: Smoke test (boot server, /login, migrations, readium)
+        run: ./scripts/smoke.sh
+
+      # Not yet proven green on a runner. Keep non-blocking until there is a baseline,
+      # then remove continue-on-error.
+      - name: Upstream tests
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: ./scripts/test.sh

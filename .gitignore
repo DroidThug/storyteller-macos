@@ -1,0 +1,12 @@
+# local state - never commit
+/upstream/
+/data/
+/.tools/
+*.log
+.secret
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+.env
+.env.*

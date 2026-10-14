@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>dev.storyteller-macos</string>
+  <key>ProgramArguments</key>
+  <array><string>__REPO__/scripts/run.sh</string></array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>STORYTELLER_DATA_DIR</key><string>__DATA_DIR__</string>
+  </dict>
+  <key>RunAtLoad</key><false/>
+  <key>KeepAlive</key><false/>
+  <key>StandardOutPath</key><string>__DATA_DIR__/launchd.log</string>
+  <key>StandardErrorPath</key><string>__DATA_DIR__/launchd.log</string>
+</dict>
+</plist>
