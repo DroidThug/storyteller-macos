@@ -26,7 +26,19 @@ beta command; we have not tested it here.
 - [Homebrew](https://brew.sh) and Xcode command line tools
 - Roughly 10 GB of free disk for source, build output and models
 
-## Quick start
+## Prebuilt releases (no local build)
+
+CI can build the pinned upstream version for you: run the **release** workflow (Actions tab). It builds,
+packs, boots the archive from a different folder to prove it is self-contained, and attaches it to a
+**draft** GitHub Release (tick "publish" to skip the draft).
+
+```sh
+./scripts/install-release.sh        # latest published release; verifies the sha256
+./scripts/install-models.sh
+./scripts/run.sh
+```
+
+## Quick start (build it yourself)
 
 ```sh
 ./scripts/setup.sh           # tools, pinned source checkout, the LFS files it needs, readium
@@ -74,11 +86,14 @@ copies the `darwin-arm64` align prebuild and the MLX addon plus `mlx.metallib`; 
 alignment step fails with "MLX Metal shader library not found". This is a packaging gap upstream
 that is worth fixing there.
 
-Status of these scripts: the individual steps were run by hand on one machine (Apple M2, 8 GB).
-The scripts themselves have not yet been run end-to-end from a fresh clone; CI is the first test of that.
+Status: CI runs `setup.sh`, `build.sh` and `smoke.sh` from a fresh checkout on a macOS arm64 runner, and
+upstream's test suites (all passing on the pinned commit). CI does not run MLX or whisper alignment, because
+that needs models and audio; those paths were verified by hand on one machine (Apple M2, 8 GB). Installing
+models through `npx` (used when there is no local build, i.e. with a prebuilt release) is untested.
 
 ## Licenses
 
 Scripts in this repo: MIT. Storyteller is MIT at the repository root, but some of its packages
-carry their own license (for example `ghost-story` is GPL-3.0). This repo fetches upstream at
-build time and does not redistribute it.
+carry their own license (for example `ghost-story` is GPL-3.0). The repo itself does not contain
+upstream code. GitHub Releases here do contain a build of it; each archive ships `NOTICE.md`, `licenses/` and
+`build-info.json` pointing at the exact upstream commit, which is the corresponding source.

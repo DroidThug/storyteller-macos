@@ -23,8 +23,8 @@ if [ -z "${STORYTELLER_SECRET_KEY:-}" ] && [ -z "${STORYTELLER_SECRET_KEY_FILE:-
   fi
 fi
 
-[ -f "$STANDALONE/server.js" ] || die "no build found; run scripts/build.sh"
-cd "$STANDALONE"
+[ -f "$RUNTIME_DIR/server.js" ] || die "no build found; run scripts/build.sh or scripts/install-release.sh"
+cd "$RUNTIME_DIR"
 
 # keep the MLX addon + metallib next to the app even if build.sh was not rerun
 mkdir -p prebuilds/darwin-arm64

@@ -1,0 +1,69 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish immediately (default: create a draft to review first)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install system tools
+        run: brew install git-lfs ffmpeg
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('config.env') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Setup
+        run: ./scripts/setup.sh
+
+      - name: Build
+        run: ./scripts/build.sh
+
+      - name: Package
+        run: ./scripts/package.sh dist
+
+      - name: Verify the archive boots from a different folder
+        run: ./scripts/verify-release.sh dist/*.tar.gz
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          . ./config.env
+          short="${UPSTREAM_REF:0:8}"
+          tag="macos-arm64-$short"
+          size="$(du -h dist/*.tar.gz | cut -f1)"
+          cat > notes.md <<NOTES
+          Unofficial macOS (Apple Silicon) build of Storyteller.
+
+          - Upstream: ${UPSTREAM_REPO%.git} at \`$UPSTREAM_REF\` (nearest release tag \`$UPSTREAM_BASE_TAG\`)
+          - Archive: $size, includes NOTICE.md, build-info.json and licenses/
+          - Built and boot-tested from a different folder in CI. MLX/whisper alignment is not run in CI.
+
+          Install: \`./scripts/install-release.sh $tag\`, then \`./scripts/install-models.sh\` and \`./scripts/run.sh\`.
+          Requires Apple Silicon, Homebrew, and node@24 + ffmpeg (the install script handles them).
+          NOTES
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+          flags=(--title "Storyteller $UPSTREAM_BASE_TAG+$short for macOS arm64" --notes-file notes.md --target "$GITHUB_SHA")
+          [ "$PUBLISH" = "true" ] || flags+=(--draft)
+          gh release create "$tag" dist/*.tar.gz dist/*.sha256 "${flags[@]}"

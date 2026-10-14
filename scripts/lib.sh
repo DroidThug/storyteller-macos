@@ -30,7 +30,26 @@ use_node() {
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 }
 
-ghost_story() { node "$UPSTREAM_DIR/libraries/ghost-story/dist/cli/bin.js" "$@"; }
+# Where the built server runs from: a local build, or an unpacked release in ./runtime.
+if [ -z "${RUNTIME_DIR:-}" ]; then
+  if [ -f "$STANDALONE/server.js" ]; then
+    RUNTIME_DIR="$STANDALONE"
+  elif [ -f "$ROOT/runtime/standalone/applications/web/server.js" ]; then
+    RUNTIME_DIR="$ROOT/runtime/standalone/applications/web"
+  else
+    RUNTIME_DIR="$STANDALONE"
+  fi
+fi
+
+# ghost-story CLI: the local build when present, otherwise the published npm package.
+ghost_story() {
+  local bin="$UPSTREAM_DIR/libraries/ghost-story/dist/cli/bin.js"
+  if [ -f "$bin" ]; then
+    node "$bin" "$@"
+  else
+    npx -y @storyteller-platform/ghost-story@latest "$@"
+  fi
+}
 
 # Readium version upstream ships in its Dockerfile (the production path). Falls back to 0.9.1.
 upstream_readium_version() {

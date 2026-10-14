@@ -3,6 +3,7 @@ name: ci
 on:
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**", "LICENSE"]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -50,9 +51,6 @@ jobs:
       - name: Smoke test (boot server, /login, migrations, readium)
         run: ./scripts/smoke.sh
 
-      # Not yet proven green on a runner. Keep non-blocking until there is a baseline,
-      # then remove continue-on-error.
       - name: Upstream tests
         if: steps.build.outcome == 'success'
-        continue-on-error: true
         run: ./scripts/test.sh

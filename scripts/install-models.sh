@@ -4,7 +4,6 @@ set -euo pipefail
 # shellcheck source=lib.sh
 . "$(dirname "$0")/lib.sh"
 use_node
-[ -f "$UPSTREAM_DIR/libraries/ghost-story/dist/cli/bin.js" ] || die "run scripts/build.sh first"
 
 if [ -z "${SKIP_WHISPER:-}" ]; then
   log "whisper.cpp ($WHISPER_VARIANT) + $WHISPER_MODEL"
