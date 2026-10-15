@@ -7,10 +7,19 @@ set -euo pipefail
 use_node
 
 DATA="${STORYTELLER_DATA_DIR:-$ROOT/data}"
+# Follow symlinks first, so a data dir that is a symlink into /Volumes is checked too.
+DATA_REAL="$DATA"
+while [ -L "$DATA_REAL" ]; do
+  link="$(readlink "$DATA_REAL")"
+  case "$link" in
+    /*) DATA_REAL="$link" ;;
+    *) DATA_REAL="$(dirname "$DATA_REAL")/$link" ;;
+  esac
+done
 # Refuse to silently create a data dir on the internal disk when an external volume is missing.
-case "$DATA" in
+case "$DATA_REAL" in
   /Volumes/*)
-    vol="/Volumes/$(printf '%s' "${DATA#/Volumes/}" | cut -d/ -f1)"
+    vol="/Volumes/$(printf '%s' "${DATA_REAL#/Volumes/}" | cut -d/ -f1)"
     # a leftover empty folder in /Volumes is not a mounted drive: require a real mount point
     mount | grep -qF " on $vol (" || die "volume not mounted (or $vol is only a leftover folder): $vol"
     ;;
