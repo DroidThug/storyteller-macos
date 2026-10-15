@@ -25,7 +25,7 @@ beta command; we have not tested it here.
 
 - Apple Silicon Mac (the MLX and CoreML prebuilds are `darwin-arm64` only)
 - [Homebrew](https://brew.sh) and Xcode command line tools
-- About 1 GB of free disk for a prebuilt release plus models; roughly 10 GB if you build from source
+- About 1.5 GB of free disk for a prebuilt release plus models; roughly 10 GB if you build from source
 
 ## Quick start (recommended): install a prebuilt release
 
