@@ -14,18 +14,22 @@ for f in ffmpeg "node@$NODE_MAJOR"; do
 done
 use_node
 
-if [ "$TAG" = latest ]; then API="https://api.github.com/repos/$REPO/releases/latest"; else API="https://api.github.com/repos/$REPO/releases/tags/$TAG"; fi
+# /releases/latest hides pre-releases, so for "latest" take the newest listed release instead
+if [ "$TAG" = latest ]; then API="https://api.github.com/repos/$REPO/releases?per_page=1"; else API="https://api.github.com/repos/$REPO/releases/tags/$TAG"; fi
 log "Release $TAG from $REPO"
 META="$(curl -fsS "$API")"
 read -r URL SHA_URL < <(printf '%s' "$META" | python3 -I -c '
 import json,sys
-r=json.load(sys.stdin); a={x["name"]:x["browser_download_url"] for x in r["assets"]}
+r=json.load(sys.stdin)
+r=r[0] if isinstance(r,list) else r
+a={x["name"]:x["browser_download_url"] for x in r["assets"]}
 t=[n for n in a if n.endswith(".tar.gz")][0]
 print(a[t], a[t+".sha256"])')
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-curl -fL --progress-bar -o "$TMP/release.tar.gz" "$URL"
+if [ -t 2 ]; then PROGRESS=--progress-bar; else PROGRESS=-sS; fi
+curl -fL $PROGRESS -o "$TMP/release.tar.gz" "$URL"
 curl -fsSL -o "$TMP/release.sha256" "$SHA_URL"
 want="$(awk '{print $1}' "$TMP/release.sha256")"
 got="$(shasum -a 256 "$TMP/release.tar.gz" | awk '{print $1}')"
