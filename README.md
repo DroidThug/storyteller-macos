@@ -2,8 +2,9 @@
 
 Run [Storyteller](https://gitlab.com/storyteller-platform/storyteller) natively on Apple Silicon, without Docker.
 
-This repo does **not** contain Storyteller. It holds the scripts that fetch a pinned upstream
-commit, build it for macOS, and start it. Storyteller's own code stays on GitLab.
+This repo's code does **not** contain Storyteller. It holds the scripts that fetch a pinned upstream
+commit, build it for macOS, and start it. Storyteller's own code stays on GitLab. Prebuilt archives are
+attached to [GitHub Releases](../../releases) (see below).
 
 Upstream's own docs say Docker on a Mac cannot access the GPU, so the Apple-only paths (MLX
 alignment, CoreML whisper) cannot run inside the container. The Docker answer on a Mac is to run
@@ -24,21 +25,27 @@ beta command; we have not tested it here.
 
 - Apple Silicon Mac (the MLX and CoreML prebuilds are `darwin-arm64` only)
 - [Homebrew](https://brew.sh) and Xcode command line tools
-- Roughly 10 GB of free disk for source, build output and models
+- About 1 GB of free disk for a prebuilt release plus models; roughly 10 GB if you build from source
 
-## Prebuilt releases (no local build)
+## Quick start (recommended): install a prebuilt release
 
-CI can build the pinned upstream version for you: run the **release** workflow (Actions tab). It builds,
-packs, boots the archive from a different folder to prove it is self-contained, and attaches it to a
-**draft** GitHub Release (tick "publish" to skip the draft).
+No compiler, no yarn, no 15-minute build. The archive is built by CI from the pinned upstream commit,
+and CI boots it from a different folder before it is published.
 
 ```sh
-./scripts/install-release.sh        # latest published release; verifies the sha256
-./scripts/install-models.sh
-./scripts/run.sh
+git clone https://github.com/DroidThug/storyteller-macos && cd storyteller-macos
+./scripts/install-release.sh   # newest published release (pre-releases included); verifies the sha256
+./scripts/install-models.sh    # whisper.cpp (CoreML) + QuartzNet (MLX); SKIP_WHISPER=1 / SKIP_CTC=1
+./scripts/run.sh               # http://127.0.0.1:8001
 ```
 
-## Quick start (build it yourself)
+`install-release.sh <tag>` installs a specific release. It needs Homebrew (it installs `node@24` and
+`ffmpeg`) and installs Readium from the archive's pinned version.
+
+Maintainers: the **release** workflow (Actions tab) builds and packs a new archive and attaches it to a
+**draft** release. Tick "publish" to skip the draft.
+
+## Build it yourself instead
 
 ```sh
 ./scripts/setup.sh           # tools, pinned source checkout, the LFS files it needs, readium
