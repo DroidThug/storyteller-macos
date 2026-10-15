@@ -11,7 +11,8 @@ DATA="${STORYTELLER_DATA_DIR:-$ROOT/data}"
 case "$DATA" in
   /Volumes/*)
     vol="/Volumes/$(printf '%s' "${DATA#/Volumes/}" | cut -d/ -f1)"
-    [ -d "$vol" ] || die "volume not mounted: $vol"
+    # a leftover empty folder in /Volumes is not a mounted drive: require a real mount point
+    mount | grep -qF " on $vol (" || die "volume not mounted (or $vol is only a leftover folder): $vol"
     ;;
 esac
 mkdir -p "$DATA"

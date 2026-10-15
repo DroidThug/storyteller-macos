@@ -49,8 +49,8 @@ packs, boots the archive from a different folder to prove it is self-contained, 
 
 Configuration is environment variables on `run.sh`: `STORYTELLER_DATA_DIR` (default `./data`),
 `PORT`, `READIUM_PORT`, `HOSTNAME_BIND`. A secret key is generated into the data dir on first run.
-If the data dir is under `/Volumes/...` and that volume is not mounted, `run.sh` refuses to start
-instead of writing to your internal disk.
+If the data dir is under `/Volumes/...` and that volume is not actually mounted (a leftover folder
+with the same name does not count), `run.sh` refuses to start instead of writing to your internal disk.
 
 `launchd/dev.storyteller-macos.plist.template` is a LaunchAgent starting point.
 
